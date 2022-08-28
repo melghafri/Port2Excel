@@ -7,9 +7,11 @@ This python code connects to Cisco switches and gather information about your po
 
 The code requires Python 3.10 virtual environment (venv) interpreter + the following libraries:
   1. netmiko --> to establish SSH sessions, which by itself uses the following libraries:
+  
     1.1 paramkio --> the original ssh connection handler
     1.2 textFSM --> it is a google project to parse regular semi-structured outputs into python lists and dictionaries
     1.3 ntc_templates --> it is a project by networktocode.com to create textFSM tamplates for major network vendors (cisco, aruba, palo alto...etc.)
+    
   2. Re --> REGEX to match strings
   3. openpyxl --> to load and create Excel files
   4. mac_vendor_lookup --> to find the manufacturer using the reserved OUI in the MAC address
