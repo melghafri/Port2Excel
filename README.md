@@ -1,5 +1,5 @@
 # Port2Excel
-This python code scans Cisco switches and gather information about your ports into an Excel file
+This python code connects to Cisco switches and gather information about your ports into an Excel file
 
 
 
