@@ -59,7 +59,6 @@ for row_no in range(device_count):
             'hostname': ws_device_inventory.cell(row_no + 2, 1).value,
             'ip_address': ws_device_inventory.cell(row_no + 2, 2).value,
             'domain': ws_device_inventory.cell(row_no + 2, 3).value,
-            'port_count': ws_device_inventory.cell(row_no + 2, 4).value,
         }
         copper_sw_list.append(copper_sw_dictionary)
     elif match('.*(DSW).*', ws_device_inventory.cell(row_no + 2, 1).value):
