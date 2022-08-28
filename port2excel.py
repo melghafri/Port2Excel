@@ -71,8 +71,8 @@ for row_no in range(device_count):
         dsw_list.append(dsw_dictionary)
 
 # get ARP tables and VLAN db from distro switches
-dsw1_domain_arp_table = []
-dsw2_domain_arp_table = []
+domain1_arp_table = []
+domain2_arp_table = []
 for sw in dsw_list:
     dsw_connection_parameters = {
         'ip': sw['ip_address'],
@@ -88,14 +88,14 @@ for sw in dsw_list:
     len_arp_table = len(dsw_show_ip_arp)
     dsw_show_vlan_bri = dsw_ssh_session.send_command('show vlan brief', use_textfsm=True)
 
-    if sw['domain'] == 'dsw1_domain':
-        dsw1_domain_vlan_db = dsw_show_vlan_bri
+    if sw['domain'] == 'domain1':
+        domain1_vlan_db = dsw_show_vlan_bri
         for x in range(len_arp_table):
-            dsw1_domain_arp_table.append(dsw_show_ip_arp[x])
-    elif sw['domain'] == 'dsw2_domain':
-        dsw1_domain_vlan_db = dsw_show_vlan_bri
+            domain1_arp_table.append(dsw_show_ip_arp[x])
+    elif sw['domain'] == 'domain2':
+        domain2_vlan_db = dsw_show_vlan_bri
         for x in range(len_arp_table):
-            dsw2_domain_arp_table.append(dsw_show_ip_arp[x])
+            domain2_arp_table.append(dsw_show_ip_arp[x])
 
 
 k = 2
@@ -105,12 +105,12 @@ for sw in copper_sw_list:
     sw_hostname = sw['hostname']
     
     # find the appropriate VLAN DB and ARP table based on switch's domain
-    if sw_domain == 'dsw1_domain' and 'ASW' in sw['hostname']:
-        dsw_vlan_db = dsw1_domain_vlan_db
-        dsw_arp_table = dsw1_domain_arp_table
-    elif sw_domain == 'dsw2_domain' and 'ASW' in sw['hostname']:
-        dsw_vlan_db = dsw1_domain_vlan_db
-        dsw_arp_table = dsw1_domain_arp_table
+    if sw_domain == 'domain1' and 'ASW' in sw['hostname']:
+        dsw_vlan_db = domain1_vlan_db
+        dsw_arp_table = domain1_arp_table
+    elif sw_domain == 'domain2' and 'ASW' in sw['hostname']:
+        dsw_vlan_db = domain2_vlan_db
+        dsw_arp_table = domain2_arp_table
 
     sw_connection_parameters = {
         'ip': sw['ip_address'],
