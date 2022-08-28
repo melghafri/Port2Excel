@@ -1,0 +1,19 @@
+Value Required INTERFACE (\S+)
+# old ip format
+#Value Required ADDRESS (\d+\.\d+\.\d+\.\d+)
+# because we have objects names so it has to be \S+
+Value Required ADDRESS (\S+)
+# forget about the age
+# Value Required AGE (\S+)
+Value Required MAC (\S+)
+
+Start
+  # old line
+  #^\s*${INTERFACE}\s+${ADDRESS}\s+${MAC}\s+${AGE} -> Record
+  # new line
+  ^\s*${INTERFACE}\s+${ADDRESS}\s+${MAC}\s+ -> Record
+  # Capture time-stamp if vty line has command time-stamping turned on
+  ^Load\s+for\s+
+  ^Time\s+source\s+is
+  ^\s*$$
+  ^. -> Error

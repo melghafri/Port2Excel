@@ -1,0 +1,26 @@
+Value Required PORT (\S+)
+Value ADMIN (auto)
+Value OPER (on|off)
+Value POWER (\d+\.\d+)
+
+Start
+  ^${PORT}\s+${ADMIN}\s+${OPER}\s+${POWER}.*$$ -> Record
+
+
+
+
+# this is old code
+#Value Required PORT (\S+)
+#Value ADMIN (auto)
+#Value OPER (on|off)
+#Value POWER (\d+\.\d+)
+#Value DEV_POWER (\d+\.\d+)
+#Value DEVICE (.+?)
+#Value CLASS (n\/a|\d)
+#Value MAX (\d+\.\d)
+#
+#Start
+# Checking for modules headers
+#  ^Module\s+Available\s+Used\s+Remaining\s*$$
+#  ^Available:\d+(\.\d+)?\(w\)\s+Used:\d+(\.\d+)?\(w\)\s+Remaining:\d+(\.\d+)?\(w\)\s*$$
+#  ^[\s(Wats)]*$$

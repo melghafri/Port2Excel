@@ -1,0 +1,14 @@
+Value PORT (\S+)
+Value ADMIN (\S+)
+Value TYPE (\S+)
+Value OPER (on|off)
+Value POWERA (\S+)
+Value POWERU (\S+)
+Value CLASS (\S+)
+Value NAME (\S.*?)
+
+Start
+  ^Interface\s+Admin -> Begin
+
+Begin
+  ^${PORT}\s+${ADMIN}\s+${TYPE}\s+${OPER}\s+${POWERA}\s+${POWERU}\s+${CLASS}\s+(?:\s+${NAME})?\s*$$ -> Record
