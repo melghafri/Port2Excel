@@ -4,6 +4,7 @@ This python code connects to Cisco switches and gather information about your po
 
 
 ==== Requirements ===
+
 The code requires Python 3.10 virtual environment (venv) interpreter + the following libraries:
   1. netmiko --> to establish SSH sessions, which by itself uses the following libraries:
     1.1 paramkio --> the original ssh connection handler
@@ -16,6 +17,7 @@ The code requires Python 3.10 virtual environment (venv) interpreter + the follo
 
 
 === Getting Started ===
+
 Pleae ensure you fill the Inventory.xlsx file with your current ineventory:
   1. ASW --> Access Layer Switch you are getting port information from
   2. DSW --> Distribution Layer Switch to get ARP table for MAC-to-IP resolution
