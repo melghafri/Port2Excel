@@ -4,7 +4,7 @@ This python code connects to Cisco switches and gather information about your po
 
 
 ==== Requirements ===
-The code requires Python 3.10 interpreter + the following libraries:
+The code requires Python 3.10 virtual environment (venv) interpreter + the following libraries:
   1. netmiko --> to establish SSH sessions, which by itself uses the following libraries:
     1.1 paramkio --> the original ssh connection handler
     1.2 textFSM --> it is a google project to parse regular semi-structured outputs into python lists and dictionaries
@@ -23,4 +23,6 @@ Pleae ensure you fill the Inventory.xlsx file with your current ineventory:
 Pleae fill the username/password in the connection parameters. These credentails are not best stored within the code, however, in the future iterations we will ensure they are securly inputted during the execution of the code.
 
 Please use the ntc_template templates files given in the repository since the default templates in the library will not work with this code.
+
+you need to put them into the following directory C:\(your python venv directory)\Lib\site-packages\ntc_templates\templates
 
