@@ -15,9 +15,11 @@ The code requires Python 3.10 virtual environment (venv) interpreter + the follo
 
 === Getting Started ===
 
-Pleae ensure you fill the Inventory.xlsx file with your current ineventory. Use the file in the repo as a template. Please ensure you have ASW/DSW in the hostname of the switches as below:
-  1. ASW --> Access Layer Switch you are getting port information from
-  2. DSW --> Distribution Layer Switch to get ARP table for MAC-to-IP resolution
+First you will need to fill the Inventory.xlsx file with switch Hostnames, IP address and domain. The domain is the L2 domain or the VTP domain the switch belongs to which usually will have a L3 gateway in the form of a distribution layer switch (DSW). 
+
+Use the .xlsx file in the repo as a template. Please ensure you have ASW/DSW in the hostname of the switches as below:
+  1. ASW --> to identify the switch as Access Layer Switch --> these are the switches you are getting port information from
+  2. DSW --> to identify the switch as Distribution Layer Switch --> to get ARP table for MAC-to-IP resolution
 
 *in case you don't need IP reolution, you can ignore DSW switches.
 
