@@ -1,11 +1,10 @@
-from openpyxl import load_workbook, Workbook
-from re import match, findall
+from openpyxl import load_workbook
+from re import compile, match, findall
 from netmiko import ConnectHandler
 from mac_vendor_lookup import MacLookup
 from time import strftime
 
 
-# below 2 functions will convret non-standard port naming into a stadnard (letters then numbber e.g. Gi1/0/1)
 def convert_port_length_in_show_output(any_show_output):
     for j in any_show_output:
         j['port'] = shorten_port(j['port'])
@@ -16,108 +15,109 @@ def shorten_port(port):
     return ''.join(findall('^.{2}|\d|/', port))
 
 
-# to search for a unique dictionary in a list and find a value
-def search_for_someones_attr(list_of_dic, key_a, value_a, key_b):  # returns a single-line string
-    for d in list_of_dic:
+# example of list_of_dict
+# list_of_dict = [
+# {'key_a': 'value_a', 'key_b': 'value_b'},
+# {'key_a': 'value_aa', 'key_b': 'value_bb'},
+# {'key_a': 'value_aaa', 'key_b': 'value_bbb'},
+# ]
+def search_for_someones_attr(list_of_dict, key_a, value_a, key_b):  # returns a single-line string
+    for d in list_of_dict:
         if d[key_a] == value_a:
             return d[key_b]
 
 
-# to search for multiple dictionary in a list and find their values
-def search_for_someones_multi_attr(list_of_dic, key_a, value_a, key_b):  # returns a multi-line string
+def search_for_someones_multi_attr(list_of_dict, key_a, value_a, key_b):  # returns a multi-line string
     value_b_string_newlines = ''
-    for q in list_of_dic:
+    for q in list_of_dict:
         if q[key_a] == value_a:
-            value_b_string_newlines = value_b_string_newlines + q[key_b] + '\n'
+            value_b_string_newlines = f'{value_b_string_newlines}{q[key_b]}\n'
     return value_b_string_newlines[:-1]
 
 
-# a specific function to find a MAC per VLAN
 def find_endpoint_mac_add_per_vlan(f_show_mac_add, port, the_vlan_given):  # returns a multi-line string
     macs_per_vlan_str_newlines = ''
     for w in f_show_mac_add:
         if w['port'][0] == port and w['vlan'] == the_vlan_given:
-            macs_per_vlan_str_newlines = macs_per_vlan_str_newlines + w['destination_address'] + '\n'
+            macs_per_vlan_str_newlines = f'{macs_per_vlan_str_newlines}{w["destination_address"]}\n'
     return macs_per_vlan_str_newlines[:-1]
 
 
-# loading the inventory files (must be pre-populated)
-wb_inventory = load_workbook(r'Inventory.xlsx')
+# open up the Inventory.xlsx file that should be pre-filled with information about all the switches
+wb_inventory = load_workbook(r'C:\Users\admin\OneDrive - Sydney Airport\Desktop\Python Inputs\Inventory.xlsx')
 ws_device_inventory = wb_inventory['Device Inventory']
 device_count = ws_device_inventory.max_row - 1
 
-# creating a new workbook to put data into
-wb_port2excel = Workbook()
-ws_main_table = wb_port2excel['Sheet']
+wb_visible = load_workbook(r'C:\Users\admin\OneDrive - Sydney Airport\Desktop\Python Inputs\VISIBLE.xlsx')
+ws_main_table = wb_visible['Main Table']
 
-# copper switch are the switches that contain copper ports (10/100/1000BaseTX)
-copper_sw_list = []
+# asw_list is a list of dict to store all the access layer switches
+asw_list = []
+# dsw_list is a list of dict to store all the distribution layer switches
 dsw_list = []
-for row_no in range(device_count):
-    if match('.*(ASW).*', ws_device_inventory.cell(row_no + 2, 1).value):
-        copper_sw_dictionary = {
-            'hostname': ws_device_inventory.cell(row_no + 2, 1).value,
-            'ip_address': ws_device_inventory.cell(row_no + 2, 2).value,
-            'domain': ws_device_inventory.cell(row_no + 2, 3).value,
+
+# vlan_db is a dict to store ARP table for each domain --> key will be a str and value will be a list of dict
+# vlan_db_dict = {
+# 'domain1': [{},{}],
+# 'domain2': [{},{}],
+# 'domain3': [{},{}],
+# }
+vlan_db_dict = {}
+# arp_table is a type dict to store ARP table for each domain --> key will be a str and value will be a list of dict
+arp_table_dict = {}
+
+for i in range(device_count):
+    if match('.*-ASW-.*', ws_device_inventory.cell(i + 2, 1).value):
+        asw_dictionary = {
+            'hostname': ws_device_inventory.cell(i + 2, 1).value,
+            'ip_address': ws_device_inventory.cell(i + 2, 2).value,
+            'domain': ws_device_inventory.cell(i + 2, 3).value,
+            'port_count': ws_device_inventory.cell(i + 2, 4).value,
         }
-        copper_sw_list.append(copper_sw_dictionary)
-    elif match('.*(DSW).*', ws_device_inventory.cell(row_no + 2, 1).value):
+        asw_list.append(asw_dictionary)
+    elif match('.*-DSW-.*', ws_device_inventory.cell(i + 2, 1).value):
+        dsw_domain = ws_device_inventory.cell(i + 2, 3).value
         dsw_dictionary = {
-            'name': ws_device_inventory.cell(row_no + 2, 1).value,
-            'ip_address': ws_device_inventory.cell(row_no + 2, 2).value,
-            'domain': ws_device_inventory.cell(row_no + 2, 3).value,
+            'hostname': ws_device_inventory.cell(i + 2, 1).value,
+            'ip_address': ws_device_inventory.cell(i + 2, 2).value,
+            'domain': dsw_domain,
         }
         dsw_list.append(dsw_dictionary)
+        # building 2 empty dictionaries for ARP Tables and VLAN Databases
+        vlan_db_dict.update({dsw_domain: []})
+        arp_table_dict.update({dsw_domain: []})
 
-# get ARP tables and VLAN db from distro switches
-domain1_arp_table = []
-domain2_arp_table = []
-for sw in dsw_list:
+for dsw in dsw_list:
     dsw_connection_parameters = {
-        'ip': sw['ip_address'],
+        'ip': dsw['ip_address'],
         'device_type': 'cisco_ios',
-        'username': '',
-        'password': '',
+        'username': 'melghafri',
+        'password': 'Airport321!',
     }
-
+    # connect to the DSW and print a connection success message
     dsw_ssh_session = ConnectHandler(**dsw_connection_parameters)
-    hostname = dsw_ssh_session.find_prompt()[:-1]
-    print(f'======= CONNECTED TO {hostname} =======')
-    dsw_show_ip_arp = dsw_ssh_session.send_command('show ip arp', use_textfsm=True)
-    len_arp_table = len(dsw_show_ip_arp)
-    dsw_show_vlan_bri = dsw_ssh_session.send_command('show vlan brief', use_textfsm=True)
+    dsw_hostname = dsw_ssh_session.find_prompt()[:-1]
+    print(f'======= CONNECTED TO {dsw_hostname} in {dsw["domain"]} =======')
 
-    if sw['domain'] == 'domain1':
-        domain1_vlan_db = dsw_show_vlan_bri
-        for x in range(len_arp_table):
-            domain1_arp_table.append(dsw_show_ip_arp[x])
-    elif sw['domain'] == 'domain2':
-        domain2_vlan_db = dsw_show_vlan_bri
-        for x in range(len_arp_table):
-            domain2_arp_table.append(dsw_show_ip_arp[x])
+    # get VALN database from ANY of the 2 DSWs, assuming both DSW switches are VTP server
+    vlan_db_dict[dsw['domain']] = dsw_ssh_session.send_command('show vlan brief', use_textfsm=True)
 
+    # get ARP table from BOTH of the 2 DSWs, assuming they are standalone running FHRP
+    show_arp_table = dsw_ssh_session.send_command('show ip arp', use_textfsm=True)
+    arp_table_dict[dsw['domain']].extend(show_arp_table)
 
+    
 k = 2
 # taking one switch at a time
-for sw in copper_sw_list:
-    sw_domain = sw['domain']
-    sw_hostname = sw['hostname']
-    
-    # find the appropriate VLAN DB and ARP table based on switch's domain
-    if sw_domain == 'domain1' and 'ASW' in sw['hostname']:
-        dsw_vlan_db = domain1_vlan_db
-        dsw_arp_table = domain1_arp_table
-    elif sw_domain == 'domain2' and 'ASW' in sw['hostname']:
-        dsw_vlan_db = domain2_vlan_db
-        dsw_arp_table = domain2_arp_table
-
+for sw in asw_list:
+    vlan_db = vlan_db_dict[sw['domain']]
+    arp_table = arp_table_dict[sw['domain']]
     sw_connection_parameters = {
         'ip': sw['ip_address'],
         'device_type': 'cisco_ios',
-        'username': '',
-        'password': '',
+        'username': 'loopbacks',
+        'password': 'H3lpm30b!tw@',
     }
-
     try:
         ssh_session = ConnectHandler(**sw_connection_parameters)
         sw_hostname = ssh_session.find_prompt()[:-1]
@@ -265,9 +265,8 @@ for sw in copper_sw_list:
             ws_main_table.cell(k, 19).value = p['power']
             k = k + 1
     except Exception as failedConn:
-        print(f'!!!!!!! CONNECTION FAILED TO {sw["hostname"]} !!!!!!!')
+        print(f'!!!!!!! CONNECTION FAILED TO {sw["hostname"]} in {sw["domain"]} !!!!!!!')
         print(failedConn)
         k = k + 1
-
 date_time = strftime('%Y-%m-%d %H-%M')
 wb_port2excel.save(rf'Port 2 Excel run at {date_time}.xlsx')
