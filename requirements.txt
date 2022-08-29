@@ -1,0 +1,6 @@
+Python 3.10 virtual environment (venv)
+netmiko 4.1.1
+openpyxl 3.0.10
+ntc-template 3.0.0
+textfsm 1.1.3
+mac-vendor-lookup 0.1.12
