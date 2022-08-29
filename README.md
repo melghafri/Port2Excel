@@ -114,6 +114,6 @@ the code itself writes all the output in an excel sheet, where each row represen
     Column N: CDP neighbor name(s)
     Column O: CDP neighbor model(s)
     Column P: CDP neighbor management IP(s)
-    Column Q: Last input(s)
-    Column R: Last output(s)
-    Column S: Power admin status
+    Column Q: last input
+    Column R: last output
+    Column S: PoE power allocated
